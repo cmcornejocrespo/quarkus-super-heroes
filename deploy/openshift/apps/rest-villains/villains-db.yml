@@ -1,77 +1,76 @@
 ---
 apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app: villains-db
+    application: villains-service
+    system: quarkus-super-heroes
+  name: villains-db-config
+data:
+  POSTGRESQL_DATABASE: dmlsbGFpbnNfZGF0YWJhc2U=
+  POSTGRESQL_USERNAME: c3VwZXJiYWQ=
+  POSTGRESQL_PASSWORD: c3VwZXJiYWQ=
+type: Opaque
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app: heroes-db
-    application: heroes-service
+    app: villains-db
+    application: villains-service
     system: quarkus-super-heroes
-  name: heroes-db-init
+  name: villains-db-init
 data:
   get-data.sh: |-
     #!/bin/bash
 
-    curl https://raw.githubusercontent.com/quarkusio/quarkus-super-heroes/main/rest-heroes/deploy/db-init/initialize-tables.sql --output /docker-entrypoint-initdb.d/1-init-tables.sql
+    curl https://raw.githubusercontent.com/quarkusio/quarkus-super-heroes/main/rest-villains/deploy/db-init/initialize-tables.sql --output /docker-entrypoint-initdb.d/1-init-tables.sql
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    name: heroes-db
-    application: heroes-service
+    name: villains-db
+    application: villains-service
     system: quarkus-super-heroes
-  name: heroes-db
+  name: villains-db
 spec:
   ports:
     - port: 5432
       protocol: TCP
       targetPort: 5432
   selector:
-    name: heroes-db
+    name: villains-db
   type: ClusterIP
----
-apiVersion: v1
-kind: Secret
-metadata:
-  labels:
-    app: heroes-db
-    application: heroes-service
-    system: quarkus-super-heroes
-  name: heroes-db-config
-data:
-  POSTGRESQL_DATABASE: aGVyb2VzX2RhdGFiYXNl
-  POSTGRESQL_USERNAME: c3VwZXJtYW4=
-  POSTGRESQL_PASSWORD: c3VwZXJtYW4=
-type: Opaque
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: heroes-db
-    application: heroes-service
+    app: villains-db
+    application: villains-service
     system: quarkus-super-heroes
-    app.kubernetes.io/part-of: heroes-service
+    app.kubernetes.io/part-of: villains-service
     app.openshift.io/runtime: postgresql
-  name: heroes-db
+  name: villains-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: heroes-db
+      name: villains-db
   template:
     metadata:
       labels:
-        name: heroes-db
-        application: heroes-service
-        system: quarkus-super-heroes
+        application: villains-service
+        name: villains-db
     spec:
       containers:
         - envFrom:
             - secretRef:
-                name: heroes-db-config
+                name: villains-db-config
           image: bitnami/postgresql:14
-          name: heroes-db
+          name: villains-db
           ports:
             - containerPort: 5432
           resources:
@@ -81,9 +80,9 @@ spec:
               memory: 32Mi
           volumeMounts:
             - mountPath: /bitnami/postgresql
-              name: heroes-db-data
+              name: villains-db-data
             - mountPath: /docker-entrypoint-initdb.d
-              name: heroes-db-init-data
+              name: villains-db-init-data
       initContainers:
         - command:
             - sh
@@ -92,15 +91,15 @@ spec:
           name: get-data
           volumeMounts:
             - mountPath: /docker-entrypoint-preinitdb.d
-              name: heroes-db-init
+              name: villains-db-init
             - mountPath: /docker-entrypoint-initdb.d
-              name: heroes-db-init-data
+              name: villains-db-init-data
           workingDir: /docker-entrypoint-preinitdb.d
       volumes:
         - emptyDir: {}
-          name: heroes-db-data
+          name: villains-db-data
         - emptyDir: {}
-          name: heroes-db-init-data
+          name: villains-db-init-data
         - configMap:
-            name: heroes-db-init
-          name: heroes-db-init
+            name: villains-db-init
+          name: villains-db-init
